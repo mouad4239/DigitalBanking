@@ -3,16 +3,19 @@ package ma.fsts.digitbank.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ma.fsts.digitbank.dto.CustomerDto;
 import ma.fsts.digitbank.entities.*;
 import ma.fsts.digitbank.enums.OperationType;
 import ma.fsts.digitbank.exceptions.BalanceNotSufficientException;
 import ma.fsts.digitbank.exceptions.BankAccountNotFounddException;
 import ma.fsts.digitbank.exceptions.CustomerNotFoundException;
+import ma.fsts.digitbank.mappers.BankAccountMapperImpl;
 import ma.fsts.digitbank.repositories.BankAccountRepository;
 import ma.fsts.digitbank.repositories.CustomerRepository;
 import ma.fsts.digitbank.repositories.OperationRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -26,10 +29,14 @@ public class IBankAccountImp implements IBankService{
     private CustomerRepository customerRepository;
     private BankAccountRepository bankAccountRepository;
     private OperationRepository operationRepository;
+    private BankAccountMapperImpl mapp;
     @Override
-    public Customer saveCustomer(Customer customer) {
+    public CustomerDto saveCustomer(CustomerDto customerDto) {
         log.info("saving account .....");
-        return customerRepository.save(customer);
+        Customer customer = mapp.customerfromCustomerDto(customerDto);
+        customer.setId(UUID.randomUUID().toString());
+        customerRepository.save(customer);
+        return mapp.customerDtofromCustomer(customer);
     }
 
     @Override
@@ -61,8 +68,13 @@ public class IBankAccountImp implements IBankService{
 
 
     @Override
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+    public List<CustomerDto> getAllCustomers() {
+         List<Customer> customers = customerRepository.findAll();
+         List<CustomerDto> customerDtos = new ArrayList<>();
+         customers.forEach(customer -> {
+             customerDtos.add(mapp.customerDtofromCustomer(customer));
+         });
+    return customerDtos;
     }
 
     @Override
@@ -110,6 +122,11 @@ public class IBankAccountImp implements IBankService{
         debit(accountIdSource,amount,"transfert to :"+accountIdDest );
         credit(accountIdDest,amount,"transfert from :"+accountIdSource);
 
+    }
+    @Override
+    public CustomerDto getCustomerDto(String customerId) throws  CustomerNotFoundException{
+        Customer customer = customerRepository.findById(customerId).orElseThrow(()->new  CustomerNotFoundException("Customer not found exception !!"));
+        return  mapp.customerDtofromCustomer(customer);
     }
 
 

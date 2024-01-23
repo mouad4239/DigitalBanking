@@ -34,11 +34,6 @@ public class DigitBankApplication {
                 //iBankService.saveCustomer(customer);
             });
 
-            try {
-                iBankService.transfert("03b475fe-7808-4292-9767-c8a93280db8f","079e2650-13ea-4c4d-8aa0-57344f014923",900);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
 
 
 
